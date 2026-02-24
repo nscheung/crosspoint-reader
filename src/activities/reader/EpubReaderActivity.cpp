@@ -102,6 +102,9 @@ void EpubReaderActivity::onEnter() {
   APP_STATE.saveToFile();
   RECENT_BOOKS.addBook(epub->getPath(), epub->getTitle(), epub->getAuthor(), epub->getThumbBmpPath());
 
+  // Initialize auto page-turn timer
+  lastPageTurnTime = millis();
+
   // Trigger first update
   requestUpdate();
 }
@@ -116,6 +119,10 @@ void EpubReaderActivity::onExit() {
   APP_STATE.saveToFile();
   section.reset();
   epub.reset();
+}
+
+bool EpubReaderActivity::preventAutoSleep() {
+  return SETTINGS.pageTurnTimer != CrossPointSettings::PAGE_TURN_TIMER_OFF;
 }
 
 void EpubReaderActivity::loop() {
@@ -160,6 +167,25 @@ void EpubReaderActivity::loop() {
                              !mappedInput.wasReleased(MappedInputManager::Button::Back);
     if (confirmCleared && backCleared) {
       skipNextButtonCheck = false;
+    }
+    return;
+  }
+
+  // Auto page-turn: advance to the next page after the configured interval.
+  // Any manual button interaction resets the timer (handled below when prevTriggered/nextTriggered).
+  const unsigned long pageTurnIntervalMs = SETTINGS.getPageTurnTimerMs();
+  if (pageTurnIntervalMs > 0 && (millis() - lastPageTurnTime >= pageTurnIntervalMs)) {
+    lastPageTurnTime = millis();
+    if (currentSpineIndex < epub->getSpineItemsCount()) {
+      if (section && section->currentPage < section->pageCount - 1) {
+        section->currentPage++;
+      } else if (section) {
+        RenderLock lock(*this);
+        nextPageNumber = 0;
+        currentSpineIndex++;
+        section.reset();
+      }
+      requestUpdate();
     }
     return;
   }
@@ -210,6 +236,9 @@ void EpubReaderActivity::loop() {
   if (!prevTriggered && !nextTriggered) {
     return;
   }
+
+  // Reset auto page-turn timer on any manual page interaction
+  lastPageTurnTime = millis();
 
   // any botton press when at end of the book goes back to the last page
   if (currentSpineIndex > 0 && currentSpineIndex >= epub->getSpineItemsCount()) {
@@ -464,6 +493,10 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
       }
       break;
     }
+    case EpubReaderMenuActivity::MenuAction::PAGE_TURN_TIMER: {
+      // Handled entirely within the menu (cycles and saves there); nothing to do here.
+      break;
+    }
   }
 }
 
@@ -681,7 +714,7 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
     renderer.displayBuffer(HalDisplay::HALF_REFRESH);
     pagesUntilFullRefresh = SETTINGS.getRefreshFrequency();
   } else {
-    renderer.displayBuffer();
+    renderer.displayBuffer(HalDisplay::HALF_REFRESH);
     pagesUntilFullRefresh--;
   }
 

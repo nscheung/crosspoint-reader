@@ -103,6 +103,16 @@ class CrossPointSettings {
     SLEEP_TIMEOUT_COUNT
   };
 
+  // Auto page-turn timer options
+  enum PAGE_TURN_TIMER {
+    PAGE_TURN_TIMER_OFF = 0,
+    PAGE_TURN_TIMER_5S = 1,
+    PAGE_TURN_TIMER_15S = 2,
+    PAGE_TURN_TIMER_30S = 3,
+    PAGE_TURN_TIMER_1MIN = 4,
+    PAGE_TURN_TIMER_COUNT
+  };
+
   // E-ink refresh frequency (pages between full refreshes)
   enum REFRESH_FREQUENCY {
     REFRESH_1 = 0,
@@ -174,6 +184,8 @@ class CrossPointSettings {
   uint8_t fadingFix = 0;
   // Use book's embedded CSS styles for EPUB rendering (1 = enabled, 0 = disabled)
   uint8_t embeddedStyle = 1;
+  // Auto page-turn timer for EPUB reader (off by default)
+  uint8_t pageTurnTimer = PAGE_TURN_TIMER_OFF;
 
   ~CrossPointSettings() = default;
 
@@ -200,6 +212,7 @@ class CrossPointSettings {
   float getReaderLineCompression() const;
   unsigned long getSleepTimeoutMs() const;
   int getRefreshFrequency() const;
+  unsigned long getPageTurnTimerMs() const;
 };
 
 // Helper macro to access settings

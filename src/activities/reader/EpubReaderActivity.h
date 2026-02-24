@@ -22,6 +22,7 @@ class EpubReaderActivity final : public ActivityWithSubactivity {
   bool pendingGoHome = false;           // Defer go home to avoid race condition with display task
   bool pendingScreenshot = false;
   bool skipNextButtonCheck = false;  // Skip button processing for one frame after subactivity exit
+  unsigned long lastPageTurnTime = 0;  // millis() of last page turn (manual or auto)
   const std::function<void()> onGoBack;
   const std::function<void()> onGoHome;
 
@@ -46,4 +47,5 @@ class EpubReaderActivity final : public ActivityWithSubactivity {
   void onExit() override;
   void loop() override;
   void render(Activity::RenderLock&& lock) override;
+  bool preventAutoSleep() override;
 };

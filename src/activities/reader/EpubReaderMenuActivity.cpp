@@ -3,6 +3,7 @@
 #include <GfxRenderer.h>
 #include <I18n.h>
 
+#include "CrossPointSettings.h"
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -37,6 +38,14 @@ void EpubReaderMenuActivity::loop() {
     if (selectedAction == MenuAction::ROTATE_SCREEN) {
       // Cycle orientation preview locally; actual rotation happens on menu exit.
       pendingOrientation = (pendingOrientation + 1) % orientationLabels.size();
+      requestUpdate();
+      return;
+    }
+
+    if (selectedAction == MenuAction::PAGE_TURN_TIMER) {
+      // Cycle page-turn timer immediately and persist.
+      SETTINGS.pageTurnTimer = (SETTINGS.pageTurnTimer + 1) % static_cast<uint8_t>(pageTurnTimerLabels.size());
+      SETTINGS.saveToFile();
       requestUpdate();
       return;
     }
@@ -109,6 +118,15 @@ void EpubReaderMenuActivity::render(Activity::RenderLock&&) {
     if (menuItems[i].action == MenuAction::ROTATE_SCREEN) {
       // Render current orientation value on the right edge of the content area.
       const char* value = I18N.get(orientationLabels[pendingOrientation]);
+      const auto width = renderer.getTextWidth(UI_10_FONT_ID, value);
+      renderer.drawText(UI_10_FONT_ID, contentX + contentWidth - 20 - width, displayY, value, !isSelected);
+    }
+
+    if (menuItems[i].action == MenuAction::PAGE_TURN_TIMER) {
+      // Render current timer value on the right edge of the content area.
+      const uint8_t timerIndex =
+          SETTINGS.pageTurnTimer < static_cast<uint8_t>(pageTurnTimerLabels.size()) ? SETTINGS.pageTurnTimer : 0;
+      const char* value = I18N.get(pageTurnTimerLabels[timerIndex]);
       const auto width = renderer.getTextWidth(UI_10_FONT_ID, value);
       renderer.drawText(UI_10_FONT_ID, contentX + contentWidth - 20 - width, displayY, value, !isSelected);
     }

@@ -76,6 +76,7 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["uiTheme"] = s.uiTheme;
   doc["fadingFix"] = s.fadingFix;
   doc["embeddedStyle"] = s.embeddedStyle;
+  doc["pageTurnTimer"] = s.pageTurnTimer;
 
   String json;
   serializeJson(doc, json);
@@ -131,6 +132,8 @@ bool JsonSettingsIO::loadSettings(CrossPointSettings& s, const char* json, bool*
   s.uiTheme = doc["uiTheme"] | (uint8_t)S::LYRA;
   s.fadingFix = doc["fadingFix"] | (uint8_t)0;
   s.embeddedStyle = doc["embeddedStyle"] | (uint8_t)1;
+  s.pageTurnTimer = clamp(doc["pageTurnTimer"] | (uint8_t)S::PAGE_TURN_TIMER_OFF,
+                          S::PAGE_TURN_TIMER_COUNT, S::PAGE_TURN_TIMER_OFF);
 
   const char* url = doc["opdsServerUrl"] | "";
   strncpy(s.opdsServerUrl, url, sizeof(s.opdsServerUrl) - 1);

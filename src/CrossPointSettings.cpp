@@ -292,6 +292,21 @@ int CrossPointSettings::getRefreshFrequency() const {
   }
 }
 
+unsigned long CrossPointSettings::getPageTurnTimerMs() const {
+  switch (pageTurnTimer) {
+    case PAGE_TURN_TIMER_5S:
+      return 5UL * 1000;
+    case PAGE_TURN_TIMER_15S:
+      return 15UL * 1000;
+    case PAGE_TURN_TIMER_30S:
+      return 30UL * 1000;
+    case PAGE_TURN_TIMER_1MIN:
+      return 60UL * 1000;
+    default:
+      return 0;
+  }
+}
+
 int CrossPointSettings::getReaderFontId() const {
   switch (fontFamily) {
     case BOOKERLY:
